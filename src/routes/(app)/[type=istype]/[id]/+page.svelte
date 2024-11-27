@@ -73,9 +73,11 @@
 	</h2>
 	<hr />
 </div>
-<div class='container'>
+<div class='container' class:blockly={$blocklyMode}>
 	{#if $blocklyMode}
-		<BlocklyComponentWidget {skill} onupdate={update} onsave={save} />
+		{#key skill}
+			<BlocklyComponentWidget {skill} onupdate={update} onsave={save} />
+		{/key}
 	{:else}
 		{#each skill.triggers as comp (comp.id)}
 			<div class='widget'>
@@ -144,6 +146,11 @@
         padding-inline: 2rem;
         flex-grow: 1;
     }
+
+	.container.blockly {
+		padding-inline: 0;
+		border-left: 3px solid #444;
+	}
 
     .widget {
         margin-right: 0.5rem;
