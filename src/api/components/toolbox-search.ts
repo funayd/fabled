@@ -110,7 +110,7 @@ export class BlockSearcher {
       }
   
       return trigrams;
-    } 
+    }
   
     /**
      * Returns the intersection of two sets.

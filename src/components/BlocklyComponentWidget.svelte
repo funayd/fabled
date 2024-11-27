@@ -163,6 +163,8 @@
 		Blockly.Scrollbar.scrollbarThickness = 10;
 	}
 
+	const cache: string[] = [];
+
 	function migrateRegistry() {
 		// @ts-ignore
 		const getClassName = (option: ComponentOption) => option.__proto__.constructor.name;
@@ -182,7 +184,8 @@
 						multiple: boolean;
 					};
 					if (data.value.length === 0) {
-						console.error(`DropdownSelect ${option.key} has no options`);
+						console.log(`DropdownSelect ${option.key} has no options`);
+						console.log(data);
 						break;
 					}
 					input.appendField(
@@ -236,7 +239,7 @@
 			Blockly.common.defineBlocks(
 				Object.entries(registry)
 					.map(([key, value]) => {
-						key = `${type.split('_')[0]}_${value.name.toLowerCase().replace(/\s/g, '_')}`;
+						key = `${type}_${key}`;
 						// @ts-ignore
 						const component = new value.component();
 						const definition: any = {
@@ -256,9 +259,7 @@
 								} else {
 									for (const option of componentOptions) optionToInput(this, option);
 								}
-								if (component.isParent) {
-									thisBlock.appendStatementInput('CHILDREN').setCheck(null);
-								}
+								thisBlock.appendStatementInput('CHILDREN').setCheck(null);
 							},
 							onchange: function (event: Blockly.Events.Abstract) {
 								const thisBlock = this as Blockly.Block;
@@ -323,11 +324,14 @@
 
 	
 	export function componentToBlock(component: FabledComponent) {
+		
 	}
 </script>
 
 <script lang="ts">
-	import FabledComponent from '$api/components/fabled-component.svelte';
+	import BlocklyComponentWidget from './BlocklyComponentWidget.svelte';
+
+	import type FabledComponent from '$api/components/fabled-component.svelte';
 	import FabledSkill, { skillStore } from '../data/skill-store.svelte';
 
 	interface Props {
@@ -345,7 +349,6 @@
 	let workspace: Blockly.WorkspaceSvg;
 
 	function blocklyInit(node: HTMLElement) {
-		console.debug('Blockly init');
 		Blockly.ShortcutRegistry.registry.reset();
 		setupToolbox();
 		setupStyle();
@@ -354,32 +357,6 @@
 			...workspace_config
 		});
 		workspace.addChangeListener(Shadow.shadowBlockConversionChangeListener);
-
-		skill.triggers.forEach(trigger => {
-			const key = `trigger_${trigger.name.toLowerCase().replace(/\s/g, '_')}`;
-			const com = workspace.newBlock(key);
-			com.initSvg();
-			com.render();
-
-		});
-		// horizontal cleanup layout
-		workspace.cleanUp = function() {
-		  this.setResizesEnabled(false);
-		  Blockly.Events.setGroup(true);
-          const blocks = this.getTopBlocks(true);
-          let x = 0;
-          for (let i = 0, block; block = blocks[i]; i++) {
-            if (!block.isMovable()) continue;
-            const pos = block.getRelativeToSurfaceXY();
-            block.moveBy(x - pos.x, -pos.y, ["cleanup"]);
-            block.snapToGrid();
-            // @ts-ignore
-            x = block.getRelativeToSurfaceXY().x + block.getHeightWidth().width + this.renderer.getConstants().MIN_BLOCK_HEIGHT;
-          }
-          Blockly.Events.setGroup(false);
-          this.setResizesEnabled(true);
-		}
-		workspace.cleanUp();
 	}
 </script>
 
@@ -388,6 +365,12 @@
 {/key}
 
 <style>
+	/* :global(.blocklyMainWorkspaceScrollbar) {
+		display: none;
+	}
+	:global(.blocklyFlyoutScrollbar) {
+		display: none;
+	} */
 	:global(.blocklyMainBackground) {
 		stroke-width: 0;
 	}
